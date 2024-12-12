@@ -6,7 +6,7 @@ from aiogram.dispatcher.filters.state import State, StatesGroup
 from aiogram.utils import executor
 
 
-API_TOKEN = '7240941938:AAG_4I_UweAJDqVy3SgDPjizNn3SDgB1L-4'
+API_TOKEN = ''
 
 logging.basicConfig(level=logging.INFO)
 
