@@ -4,7 +4,7 @@ from aiogram.contrib.fsm_storage.memory import MemoryStorage
 from aiogram.dispatcher import FSMContext
 from aiogram.dispatcher.filters.state import State, StatesGroup
 from aiogram.utils import executor
-from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton
+from aiogram.types import ReplyKeyboardMarkup, KeyboardButton, InlineKeyboardMarkup, InlineKeyboardButton
 
 API_TOKEN = ''
 
@@ -22,21 +22,24 @@ class UserState(StatesGroup):
     gender = State()
 
 
-inline_keyboard = InlineKeyboardMarkup(row_width=1)
-button_calories = InlineKeyboardButton('Рассчитать норму калорий', callback_data='calories')
-button_formulas = InlineKeyboardButton('Формулы расчёта', callback_data='formulas')
-inline_keyboard.add(button_calories, button_formulas)
+keyboard = ReplyKeyboardMarkup(resize_keyboard=True)
+button_calculate = KeyboardButton('Рассчитать')
+button_info = KeyboardButton('Информация')
+keyboard.add(button_calculate, button_info)
 
 
 @dp.message_handler(commands=['start'])
 async def start(message: types.Message):
-    print('Привет! Я бот помогающий твоему здоровью.')
-    await message.answer('Привет! Я бот помогающий твоему здоровью.\nВыберите действие:',
-                         reply_markup=inline_keyboard)
+    await message.answer('Привет! Я бот, помогающий твоему здоровью.\nВыберите действие:', reply_markup=keyboard)
 
 
-@dp.message_handler(lambda message: message.text == 'Рассчитат')
+@dp.message_handler(lambda message: message.text == 'Рассчитать')
 async def mein_menu(message: types.Message):
+    inline_keyboard = InlineKeyboardMarkup(row_width=2)
+    button_calories = InlineKeyboardButton('Рассчитать норму калорий', callback_data='calories')
+    button_formulas = InlineKeyboardButton('Формулы расчёта', callback_data='formulas')
+    inline_keyboard.add(button_calories, button_formulas)
+
     await message.answer('Выберите опцию:', reply_markup=inline_keyboard)
 
 
@@ -59,10 +62,10 @@ async def set_gender(call: types.CallbackQuery):
 @dp.message_handler(state=UserState.gender)
 async def set_age(message: types.Message, state: FSMContext):
     gender = message.text.lower()
-    if gender in ['мужчина','женщина']:
+    if gender in ['мужчина', 'женщина']:
         await state.update_data(gender=gender)
         await UserState.age.set()
-        await message.answer('Введите свой возрост:')
+        await message.answer('Введите свой возраст:')
     else:
         await message.answer('Пожалуйста, введите корректный пол (мужчина/женщина).')
 
@@ -74,7 +77,7 @@ async def set_growth(message: types.Message, state: FSMContext):
         await UserState.growth.set()
         await message.answer('Введите свой рост (в см):')
     else:
-        await message.answer('Пожалуйста, введите коррктный возраст (число).')
+        await message.answer('Пожалуйста, введите корректный возраст (число).')
 
 
 @dp.message_handler(state=UserState.growth)
@@ -84,7 +87,7 @@ async def set_weight(message: types.Message, state: FSMContext):
         await UserState.weight.set()
         await message.answer('Введите свой вес (в кг):')
     else:
-        await message.answer('Пожалуйста, введите коррктный рост (число).')
+        await message.answer('Пожалуйста, введите корректный рост (число).')
 
 
 @dp.message_handler(state=UserState.weight)
@@ -126,9 +129,11 @@ async def send_info(message: types.Message):
     await message.answer(info_text)
 
 
+@dp.message_handler(lambda message: True)
+async def all_messages(message: types.Message):
+    await message.answer('Введите команду /start, чтобы начать общение.')
+
+
 if __name__ == '__main__':
     print('Бот запущен. Ожидание сообщений...')
     executor.start_polling(dp, skip_updates=True)
-
-
-
